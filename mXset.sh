@@ -1,98 +1,86 @@
 #!/bin/bash
- E='echo -e';
- e='echo -en';
-#
- i=0; CLEAR; CIVIS;NULL=/dev/null
- trap "R;exit" 2
- ESC=$( $e "\e")
- TPUT(){ $e "\e[${1};${2}H" ;}
- CLEAR(){ $e "\ec";}
- CIVIS(){ $e "\e[?25l";}
- R(){ CLEAR ;stty sane;CLEAR;};                 # в этом варианте фон прозрачный
-#
- ARROW(){ IFS= read -s -n1 key 2>/dev/null >&2
-           if [[ $key = $ESC ]];then
-              read -s -n1 key 2>/dev/null >&2;
-              if [[ $key = \[ ]]; then
-                 read -s -n1 key 2>/dev/null >&2;
-                 if [[ $key = A ]]; then echo up;fi
-                 if [[ $key = B ]];then echo dn;fi
-              fi
-           fi
-           if [[ "$key" == "$($e \\x0A)" ]];then echo enter;fi;}
-
- UNMARK(){ $e "\e[0m";}
- MARK(){ $e "\e[30;47m";}
-#
- HEAD()
+ trap 'echo -en "\ec"; stty sane; exit' SIGINT
+ aa=0
+ A(){ for b in $(seq 0 24);do E${b};done; }
+ B()
 {
- for (( a=2; a<=40; a++ ))
-  do
-    TPUT $a 1
-         $E "\e[47;30m│\e[0m                                                                                \e[47;30m│\e[0m";
-  done
-    TPUT  1 1;$E "\033[0m\033[47;30m┌────────────────────────────────────────────────────────────────────────────────┐\033[0m"
-    TPUT  3 3;$E "\e[1;36m *** xset ***\e[0m";
-    TPUT  4 3;$E "\e[2m утилита настройки пользователя для X\e[0m";
-    TPUT  5 1;$E "\e[47;30m├\e[0m\e[1;30m────────────────────────────────────────────────────────────────────────────────\e[0m\e[47;30m┤\e[0m";
-    TPUT 10 1;$E "\e[47;30m├\e[0m\e[1;30m────────────────────────────────────────────────────────────────────────────────\e[0m\e[47;30m┤\e[0m";
-    TPUT 11 3;$E "\e[36m OPTIONS                                                               ОПЦИИ\e[0m";
-    TPUT 31 1;$E "\e[47;30m├\e[0m\e[1;30m────────────────────────────────────────────────────────────────────────────────\e[0m\e[47;30m┤\e[0m";
-    TPUT 32 3;$E "\e[2m Эти настройки будут сброшены на значения по умолчанию, когда вы выйдете из\e[0m";
-    TPUT 33 3;$E "\e[2m системы. Обратите внимание, что не все реализации X гарантированно будут\e[0m";
-    TPUT 34 3;$E "\e[2m учитывать все эти параметры.\e[0m";
-    TPUT 35 1;$E "\e[47;30m├\e[0m\e[1;30m────────────────────────────────────────────────────────────────────────────────\e[0m\e[47;30m┤\e[0m";
-    TPUT 37 1;$E "\e[47;30m├\e[0m\e[1;30m────────────────────────────────────────────────────────────────────────────────\e[0m\e[47;30m┤\e[0m";
-    TPUT 38 3;$E "\e[2m Up \xE2\x86\x91 \xE2\x86\x93 Down Select Enter \e[0m";
+  local c
+  IFS= read -s -n1 c 2>/dev/null >&2
+  if [[ $c = $(echo -en "\e") ]]; then
+    read -s -n1 c 2>/dev/null >&2
+    if [[ $c = \[ ]]; then
+      read -s -n1 c 2>/dev/null >&2
+      case $c in
+        A) echo d ;;
+        B) echo e ;;
+        C) echo f ;;
+        D) echo g ;;
+      esac
+    fi
+  elif [[ "$c" == "$(echo -en \\x0A)" ]]; then
+    echo enter
+  fi
 }
- FOOT(){ MARK;TPUT 41 1;$E "\033[0m\033[47;30m└────────────────────────────────────────────────────────────────────────────────┘\033[0m";UNMARK;}
-#
-  M0(){ TPUT  6 3; $e " СИНТАКСИС                                                         \e[32m SYNOPSIS \e[0m";}
-  M1(){ TPUT  7 3; $e " ОПИСАНИЕ                                                       \e[32m DESCRIPTION \e[0m";}
-  M2(){ TPUT  8 3; $e " СМОТРИТЕ ТАКЖЕ                                                    \e[32m SEE ALSO \e[0m";}
-  M3(){ TPUT  9 3; $e " АВТОР                                                               \e[32m AUTHOR \e[0m";}
-#
-  M4(){ TPUT 12 3; $e " Этот параметр указывает используемый сервер; смотри Х     \e[32m -display display \e[0m";}
-  M5(){ TPUT 13 3; $e " Параметр b регулирует громкость, высоту и продолжительность звонка       \e[32m b \e[0m";}
-  M6(){ TPUT 14 3; $e " Параметр bc управляет режимом совместимости с ошибками на сервере       \e[32m bc \e[0m";}
-  M7(){ TPUT 15 3; $e " Параметр c управляет нажатием клавиши                                    \e[32m c \e[0m";}
-  M8(){ TPUT 16 3; $e " Параметр -dpms отключает функции DPMS (Energy Star)                  \e[32m -dpms \e[0m";}
-  M9(){ TPUT 17 3; $e " Параметр +dpms  включает функции DPMS (Energy Star)                  \e[32m +dpms \e[0m";}
- M10(){ TPUT 18 3; $e " Опция dpms позволяет установить параметры DPMS (Energy Star) \e[32m dpms flags... \e[0m";}
- M11(){ TPUT 19 3; $e " устанавливает путь шрифта к записям, указанным в аргументе пути\e[32m fp= path... \e[0m";}
- M12(){ TPUT 20 3; $e " Аргумент по умолчанию приводит к сбросу пути к шрифту на сервер \e[32m fp default \e[0m";}
- M13(){ TPUT 21 3; $e " Аргумент rehash сбрасывает путь к шрифту до его текущего значения\e[32m fp rehash \e[0m";}
- M14(){ TPUT 22 3; $e " Опции -fp и fp- удаляют элементы из текущего пути к шрифту      \e[32m -fp or fp- \e[0m";}
- M15(){ TPUT 23 3; $e " Опции +fp и fp+ добавляют элементы к текущему пути шрифта       \e[32m +fp or fp+ \e[0m";}
- M16(){ TPUT 24 3; $e " Опция led управляет светодиодами клавиатуры                            \e[32m led \e[0m";}
- M17(){ TPUT 25 3; $e " Опция m управляет параметрами мыши                                   \e[32m mouse \e[0m";}
- M18(){ TPUT 26 3; $e " Параметр p управляет значениями цвета пикселей                           \e[32m p \e[0m";}
- M19(){ TPUT 27 3; $e " Параметр r управляет автоповтором                                        \e[32m r \e[0m";}
- M20(){ TPUT 28 3; $e " Опция s позволяет установить параметры экранной заставки                 \e[32m s \e[0m";}
- M21(){ TPUT 29 3; $e " Опция q дает вам информацию о текущих настройках                         \e[32m q \e[0m";}
- M22(){ TPUT 30 3; $e " Опция -version выводит версию программы и завершает работу        \e[32m -version \e[0m";}
-#
- M23(){ TPUT 36 3; $e " Grannik Git                                                                 ";}
-#
- M24(){ TPUT 39 3; $e " Exit                                                                        ";}
-LM=24
-   MENU(){ for each in $(seq 0 $LM);do M${each};done;}
-    POS(){ if [[ $cur == up ]];then ((i--));fi
-           if [[ $cur == dn ]];then ((i++));fi
-           if [[ $i -lt 0   ]];then i=$LM;fi
-           if [[ $i -gt $LM ]];then i=0;fi;}
-REFRESH(){ after=$((i+1)); before=$((i-1))
-           if [[ $before -lt 0  ]];then before=$LM;fi
-           if [[ $after -gt $LM ]];then after=0;fi
-           if [[ $j -lt $i      ]];then UNMARK;M$before;else UNMARK;M$after;fi
-           if [[ $after -eq 0 ]] || [ $before -eq $LM ];then
-           UNMARK; M$before; M$after;fi;j=$i;UNMARK;M$before;M$after;}
-   INIT(){ R;HEAD;FOOT;MENU;}
-     SC(){ REFRESH;MARK;$S;$b;cur=`ARROW`;}
-# Функция возвращения в меню
-     ES(){ MARK;$e " ENTER = main menu ";$b;read;INIT;};INIT
-  while [[ "$O" != " " ]]; do case $i in
-  0) S=M0;SC; if [[ $cur == enter ]];then R;echo -e "
+ C()
+{
+ if [[ $i == d ]];then ((aa--));fi
+ if [[ $i == e ]];then ((aa++));fi
+ if [[ $aa -lt 0  ]];then aa=24;fi
+ if [[ $aa -gt 24 ]];then aa=0;fi;
+}
+
+ D()
+{
+ j1=$((aa+1)); k1=$((aa-1))
+ if [[ $k1 -lt 0   ]];then k1=24;fi
+ if [[ $j1 -gt 24 ]];then j1=0;fi
+ if [[ $aa -lt $aa ]];then echo -en "\e[0m";E$k1;else echo -en "\e[0m";E$j1;fi
+ if [[ $j1 -eq 0   ]] || [ $k1 -eq 24 ];then
+ echo -en "\e[0m" ; E$k1; E$j1;fi;echo -en "\e[0m";E$k1;E$j1;
+}
+ TXa()
+{
+ for (( a=2; a<=34; a++ ))
+  do
+   echo -e "\e[${a};1H\e[\e[46;30m│\e[0m                                                                                \e[46;30m│\e[0m"
+  done
+ echo -en "\e[0;1H\e[46;30m┌────────────────────────────────────────────────────────────────────────────────┐\e[0m";
+ echo -en "\e[3;3H\e[1;36m *** xset ***\e[0m";
+ echo -en "\e[4;1H\e[46;30m├\e[0m\e[36m────────────────────────────────────────────────────────────────────────────────\e[0m\e[46;30m┤\e[0m";
+ echo -en "\e[5;3H\e[2m утилита настройки пользователя для X\e[0m";
+ echo -en "\e[6;1H\e[46;30m├\e[0m\e[36m────────────────────────────────────────────────────────────────────────────────\e[0m\e[46;30m┤\e[0m";
+ echo -en "\e[30;1H\e[46;30m├\e[0m\e[36m────────────────────────────────────────────────────────────────────────────────\e[0m\e[46;30m┤\e[0m";
+ echo -en "\e[32;1H\e[46;30m├\e[0m\e[36m─ \xE2\x86\x91 Up ───── \xE2\x86\x93 Down ──── \xe2\x86\xb2 Select Enter ────────────────────────────────────────\e[0m\e[46;30m┤\e[0m";
+ echo -en "\e[35;1H\e[46;30m└────────────────────────────────────────────────────────────────────────────────┘\e[0m";
+}
+  E0(){ echo -en "\e[7;3H СИНТАКСИС                                                         \e[32m SYNOPSIS \e[0m";}
+  E1(){ echo -en "\e[8;3H ОПИСАНИЕ                                                       \e[32m DESCRIPTION \e[0m";}
+  E2(){ echo -en "\e[9;3H СМОТРИТЕ ТАКЖЕ                                                    \e[32m SEE ALSO \e[0m";}
+  E3(){ echo -en "\e[10;3H АВТОР                                                               \e[32m AUTHOR \e[0m";}
+  E4(){ echo -en "\e[11;3H Этот параметр указывает используемый сервер; смотри Х     \e[32m -display display \e[0m";}
+  E5(){ echo -en "\e[12;3H Параметр b регулирует громкость, высоту и продолжительность звонка       \e[32m b \e[0m";}
+  E6(){ echo -en "\e[13;3H Параметр bc управляет режимом совместимости с ошибками на сервере       \e[32m bc \e[0m";}
+  E7(){ echo -en "\e[14;3H Параметр c управляет нажатием клавиши                                    \e[32m c \e[0m";}
+  E8(){ echo -en "\e[15;3H Параметр -dpms отключает функции DPMS (Energy Star)                  \e[32m -dpms \e[0m";}
+  E9(){ echo -en "\e[16;3H Параметр +dpms  включает функции DPMS (Energy Star)                  \e[32m +dpms \e[0m";}
+ E10(){ echo -en "\e[17;3H Опция dpms позволяет установить параметры DPMS (Energy Star) \e[32m dpms flags... \e[0m";}
+ E11(){ echo -en "\e[18;3H устанавливает путь шрифта к записям, указанным в аргументе пути\e[32m fp= path... \e[0m";}
+ E12(){ echo -en "\e[19;3H Аргумент по умолчанию приводит к сбросу пути к шрифту на сервер \e[32m fp default \e[0m";}
+ E13(){ echo -en "\e[20;3H Аргумент rehash сбрасывает путь к шрифту до его текущего значения\e[32m fp rehash \e[0m";}
+ E14(){ echo -en "\e[21;3H Опции -fp и fp- удаляют элементы из текущего пути к шрифту      \e[32m -fp or fp- \e[0m";}
+ E15(){ echo -en "\e[22;3H Опции +fp и fp+ добавляют элементы к текущему пути шрифта       \e[32m +fp or fp+ \e[0m";}
+ E16(){ echo -en "\e[23;3H Опция led управляет светодиодами клавиатуры                            \e[32m led \e[0m";}
+ E17(){ echo -en "\e[24;3H Опция m управляет параметрами мыши                                   \e[32m mouse \e[0m";}
+ E18(){ echo -en "\e[25;3H Параметр p управляет значениями цвета пикселей                           \e[32m p \e[0m";}
+ E19(){ echo -en "\e[26;3H Параметр r управляет автоповтором                                        \e[32m r \e[0m";}
+ E20(){ echo -en "\e[27;3H Опция s позволяет установить параметры экранной заставки                 \e[32m s \e[0m";}
+ E21(){ echo -en "\e[28;3H Опция q дает вам информацию о текущих настройках                         \e[32m q \e[0m";}
+ E22(){ echo -en "\e[29;3H Опция -version выводит версию программы и завершает работу        \e[32m -version \e[0m";}
+ E23(){ echo -en "\e[31;3H                                                                        \e[32m Git \e[0m";}
+ E24(){ echo -en "\e[33;3H                                                                       \e[36m Exit \e[0m";}
+ INI(){ echo -en "\ec" ;stty sane;TXa;A; };INI
+ while [[ "$l1" != " " ]]; do case $aa in
+  0)D;echo -en "\e[46;30m"; (E0);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
 \e[32m xset [-display display    ]\e[0m
  xset [-отображение дисплея]
 
@@ -158,24 +146,23 @@ REFRESH(){ after=$((i+1)); before=$((i-1))
 
 \e[32m [-version]\e[0m
  [-версия ]
-";ES;fi;;
-  1) S=M1;SC; if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+  1)D;echo -en "\e[46;30m"; (E1);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Эта программа используется для установки пользовательских параметров дисплея.
-";ES;fi;;
-  2) S=M2;SC; if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+  2)D;echo -en "\e[46;30m"; (E2);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
 \e[32m X, Xserver, xmodmap, xrdb, xsetroot, xinput\e[0m
-";ES;fi;;
-  3) S=M3;SC; if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+  3)D;echo -en "\e[46;30m"; (E3);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Боб Шайфлер,
  Лаборатория компьютерных наук Массачусетского технологического института
  Давид Крикорян, MIT Project Athena (версия X11)
  Поддержка XFree86-Misc добавлена Дэвидом Доусом и Джо Моссом.
  Обновления справочной страницы, добавленные Майком А. Харрисом:
 \e[36m mharris@redhat.com\e[0m
-";ES;fi;;
-#
-  4) S=M4;SC; if [[ $cur == enter ]];then R;echo -e "\e[32m \e[0m";ES;fi;;
-  5) S=M5;SC; if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+  4)D;echo -en "\e[46;30m"; (E4);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+  5)D;echo -en "\e[46;30m"; (E5);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Параметр b регулирует громкость, высоту и продолжительность звонка. Эта опция
  принимает до трех числовых параметров, предшествующий тире (-) или on/off флаг.
  Если параметры не указаны или используется флаг on, будут использоваться систем-
@@ -186,8 +173,8 @@ REFRESH(){ after=$((i+1)); before=$((i-1))
  раметр определяет продолжительность в миллисекундах. Обратите внимание, что не
  все оборудование может изменять характеристики звонка. X-сервер установит
  характеристики звонка как можно ближе к спецификациям пользователя.
-\e[32m \e[0m";ES;fi;;
-  6) S=M6;SC; if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+  6)D;echo -en "\e[46;30m"; (E6);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Параметр bc управляет режимом совместимости с ошибками на сервере, если это воз-
  можно; предшествующий тире (-) отключает режим, в противном случае режим включа-
  ется Клиенты версии pre-R4 передают недопустимые значения в некоторых запросах
@@ -198,8 +185,8 @@ REFRESH(){ after=$((i+1)); before=$((i-1))
  могут работать. Этот режим следует использовать с осторожностью; разработка ново-
  го приложения следует делать с отключенным этим режимом. Чтобы эта опция работала,
  сервер должен поддерживать расширение протокола MIT-SUNDRY-NONSTANDARD.
-\e[32m \e[0m";ES;fi;;
-  7) S=M7;SC; if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+  7)D;echo -en "\e[46;30m"; (E7);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Параметр c управляет нажатием клавиши. Эта опция может принимать необязательное
  значение, предшествующий дефис (-) или флаг «вкл/выкл». Если нет параметра или
  флаг on задано, будут использоваться системные значения по умолчанию. Если исполь-
@@ -207,20 +194,20 @@ REFRESH(){ after=$((i+1)); before=$((i-1))
  от 0  до 100, используется для обозначения объема в процентах от максимального.
  X-сервер установит громкость на ближайшее значение,
  которое может поддерживать аппаратное обеспечение.
-\e[32m \e[0m";ES;fi;;
-  8) S=M8;SC; if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+  8)D;echo -en "\e[46;30m"; (E8);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Отключить функции DPMS (Energy Star):\e[32m xset -dpms\e[0m
 
  запрет переключения монитора в энергоэффективный режим:
 \e[32m xset -dpms && xset s off\e[0m
-";ES;fi;;
-  9) S=M9;SC; if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+  9)D;echo -en "\e[46;30m"; (E9);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Включите функции DPMS (Energy Star):\e[32m xset +dpms\e[0m
 
  разрешение переключения монитора в энергоэффективный режим:
 \e[32m xset +dpms && xset s on\e[0m
-";ES;fi;;
- 10) S=M10;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 10)D;echo -en "\e[46;30m";(E10);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Опция dpms позволяет установить параметры DPMS (Energy Star).
 
  Опция может принимать до трех числовых значений,
@@ -246,30 +233,30 @@ REFRESH(){ after=$((i+1)); before=$((i-1))
 
  Нулевое значение отключает определенный режим.
  Отключить выключение экрана:\e[32m xset s off && xset dpms 0 0 0\e[0m
-";ES;fi;;
- 11) S=M11;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 11)D;echo -en "\e[46;30m";(E11);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  fp= path,... устанавливает путь шрифта к записям, указанным в аргументе пути.
  Записи интерпретируются сервером, а не клиентом. Обычно они являются именами
  каталогов или именами серверов шрифтов, но интерпретация зависит от сервера.
-\e[32m \e[0m";ES;fi;;
- 12) S=M12;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 12)D;echo -en "\e[46;30m";(E12);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Аргумент по умолчанию приводит к сбросу пути к шрифту на сервер по умолчанию.
-\e[32m \e[0m";ES;fi;;
- 13) S=M13;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 13)D;echo -en "\e[46;30m";(E13);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Аргумент rehash сбрасывает путь к шрифту до его текущего значения, заставляя сер-
  вер повторно считывать базы данных шрифтов в текущем пути к шрифту. Это обычно
  используется только при добавлении новых шрифтов в каталог шрифтов (после запуска
  mkfontdir для воссоздания базы данных шрифтов).
-\e[32m \e[0m";ES;fi;;
- 14) S=M14;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 14)D;echo -en "\e[46;30m";(E14);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Опции -fp и fp- удаляют элементы из текущего пути к шрифту.
  За ними должен следовать список записей, разделенных запятыми.
-\e[32m \e[0m";ES;fi;;
- 15) S=M15;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 15)D;echo -en "\e[46;30m";(E15);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Эти параметры +fp и fp+ добавляют элементы к текущему пути шрифта соответственно.
  За ними должен следовать список.
-\e[32m \e[0m";ES;fi;;
- 16) S=M16;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 16)D;echo -en "\e[46;30m";(E16);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Опция led управляет светодиодами клавиатуры.
  Управляет включением или выключением одного или всех светодиодов. Он принимает
  необязательное целое число, предшествующий тире (-) или флаг on/off. Если пара-
@@ -285,8 +272,8 @@ REFRESH(){ after=$((i+1)); before=$((i-1))
  светодиоды можно ссылаться по имени индикатора XKB, указав ключевое слово «named»
  и имя индикатора. Например, чтобы включить индикатор блокировки прокрутки:
 \e[32m xset led named \"Scroll Lock\"\e[0m
-";ES;fi;;
- 17) S=M17;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 17)D;echo -en "\e[46;30m";(E17);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Опция m управляет параметрами мыши; это может быть сокращено до «м».
  Конечно, это относится к большинству указывающих устройств, а не только к мышам.
  Параметрами манипулятора являются:
@@ -316,8 +303,8 @@ REFRESH(){ after=$((i+1)); before=$((i-1))
  поэтому приведенное выше описание может не относиться к случаям, отличным от
  стандартных.
  В X.org Server 1.7 они доступны как свойства устройства ввода (см. xinput).
-\e[32m \e[0m";ES;fi;;
- 18) S=M18;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 18)D;echo -en "\e[46;30m";(E18);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Параметр p управляет значениями цвета пикселей.
  Параметрами являются номер записи карты цветов в десятичном формате и специфика-
  ция цвета. Корневые цвета фона могут быть изменены на некоторых серверах путем
@@ -325,8 +312,8 @@ REFRESH(){ after=$((i+1)); before=$((i-1))
  зательно. Кроме того, сервер может выделить эти цвета в частном порядке, и в
  этом случае будет сгенерирована ошибка. Запись карты не должна быть цветом,
  доступным только для чтения, иначе возникнет ошибка.
-";ES;fi;;
- 19) S=M19;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 19)D;echo -en "\e[46;30m";(E19);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Параметр r управляет автоповтором.
  Вызов с помощью «-r» или «r off» отключит автоповтор, тогда как «r» или «r on»
  включит автоповтор. Использование опции «-r» или «r» с целочисленным кодом кла-
@@ -341,8 +328,8 @@ REFRESH(){ after=$((i+1)); before=$((i-1))
  держка — это количество миллисекунд до запуска автоповтора, а скорость — это ко-
  личество повторений в секунду. Если скорость или задержка не указаны, они будут
  установлены на значение по умолчанию.
-\e[32m \e[0m";ES;fi;;
- 20) S=M20;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 20)D;echo -en "\e[46;30m";(E20);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Опция s позволяет установить параметры экранной заставки.
 
  флаг\e[32m 'blank/noblank'  \e[0m пустой      /непустой
@@ -375,39 +362,29 @@ REFRESH(){ after=$((i+1)); before=$((i-1))
  Эта опция принимает до двух числовых параметров.
 
  Установите заставку на запуск через 60 минут бездействия:\e[32m xset s 3600 3600\e[0m
-
-";ES;fi;;
- 21) S=M21;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 21)D;echo -en "\e[46;30m";(E21);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Опция q дает вам информацию о текущих настройках.
  Параметр q предоставляет информацию о текущих настройках:\e[32m xset q\e[0m
 
  Показать: Деактивирован/активирован
            Disabled     /Enabled   \e[32m xset -q|sed -ne 's/^[ ]*DPMS is //p'\e[0m
-";ES;fi;;
- 22) S=M22;SC;if [[ $cur == enter ]];then R;echo -e "
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 22)D;echo -en "\e[46;30m";(E22);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
  Опция выводит версию программы и завершает работу, ничего больше не делая:
 \e[32m xset -version\e[0m
-";ES;fi;;
-#
- 23) S=M23;SC;if [[ $cur == enter ]];then R;echo -e "
- mXset - описание утилиты xset. Hастройки пользователя для X
-\e[32m \e[0m
-\e[32m \e[0m
-\e[32m \e[0m
-\e[32m \e[0m
-\e[32m \e[0m
-\e[32m \e[0m
-\e[32m \e[0m
-\e[32m \e[0m
-\e[32m \e[0m
-\e[32m \e[0m
- s - source      file источник
- m - menu        file меню
- n - simple menu file простое меню
- l - bash list   file лист
- t - text        file текстовый файл
-
- Di 02 Aug 2022
-";ES;fi;;
- 24) S=M24;SC;if [[ $cur == enter ]];then R;clear;ls -l;exit 0;fi;;
- esac;POS;done
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 23)D;echo -en "\e[46;30m";(E23);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;echo -e "
+ mXset Описание утилиты xset настройки пользователя для X
+ asciinema:  \e[36m https://asciinema.org/a/656141\e[0m
+ codeberg:   \e[36m https://codeberg.org/Grannik/mXset\e[0m
+ github:     \e[36m \e[0m
+ gitlab:     \e[36m \e[0m
+ sourceforge:\e[36m \e[0m
+ notabug:    \e[36m \e[0m
+ bitbucket:  \e[36m \e[0m
+ gitea:      \e[36m \e[0m
+ gogs:       \e[36m \e[0m
+";echo -en "\e[46;30m ENTER = main menu ";read;INI;fi;;
+ 24)D;echo -en "\e[46;2m";(E24);i=`B`;if [[ $i == enter ]];then echo -en "\ec";stty sane;exit 0;fi;;
+esac;C;done
